@@ -98,9 +98,9 @@ else:
 features_data = []
 
 # Numerical features (use defaults if missing)
-features_data.append(('weight', df_clean['Weight_(Kilograms)'].fillna(10.0).values))
+features_data.append(('weight', df_clean['Weight_Kilograms'].fillna(10.0).values))
 features_data.append(('quantity', df_clean['Line_Item_Quantity'].fillna(100).values))
-features_data.append(('freight_cost', df_clean['Freight_Cost_(USD)'].fillna(1000).values))
+features_data.append(('freight_cost', df_clean['Freight_Cost_USD'].fillna(1000).values))
 
 # Temporal features
 features_data.append(('month', df_clean['month'].values))
@@ -146,7 +146,7 @@ print(f"📊 Product mapping created ({len(mappings['product_mapping'])} product
 print("\nStep 4 (Fixed): Cleaning weight data and training model...")
 
 # First, fix the weight column - convert non-numeric to NaN then fill
-print(f"Unique values in Weight_(Kilograms): {df_clean['Weight_(Kilograms)'].unique()[:20]}")
+print(f"Unique values in Weight_Kilograms: {df_clean['Weight_Kilograms'].unique()[:20]}")
 
 # Convert weight column properly
 def clean_weight(value):
@@ -155,16 +155,16 @@ def clean_weight(value):
     except:
         return np.nan
 
-df_clean['Weight_(Kilograms)_clean'] = df_clean['Weight_(Kilograms)'].apply(clean_weight)
+df_clean['Weight_Kilograms_clean'] = df_clean['Weight_Kilograms'].apply(clean_weight)
 
 # Check weight statistics
 print(f"\nWeight statistics after cleaning:")
-print(f"Missing values: {df_clean['Weight_(Kilograms)_clean'].isna().sum()}")
-print(f"Mean weight: {df_clean['Weight_(Kilograms)_clean'].mean():.2f}")
-print(f"Median weight: {df_clean['Weight_(Kilograms)_clean'].median():.2f}")
+print(f"Missing values: {df_clean['Weight_Kilograms_clean'].isna().sum()}")
+print(f"Mean weight: {df_clean['Weight_Kilograms_clean'].mean():.2f}")
+print(f"Median weight: {df_clean['Weight_Kilograms_clean'].median():.2f}")
 
 # Update features with cleaned weight
-X['weight'] = df_clean['Weight_(Kilograms)_clean'].fillna(10.0).values
+X['weight'] = df_clean['Weight_Kilograms_clean'].fillna(10.0).values
 
 # Verify all features are numeric
 print(f"\nFeature data types:")
@@ -177,7 +177,7 @@ print(f"\nCorresponding delays: {y[:3]}")
 print("\nStep 5 (Fixed): Cleaning freight_cost data...")
 
 # Check what's in freight_cost column
-print(f"Unique values in freight_cost: {df_clean['Freight_Cost_(USD)'].unique()[:10]}")
+print(f"Unique values in freight_cost: {df_clean['Freight_Cost_USD'].unique()[:10]}")
 
 # Clean freight_cost column
 def clean_freight(value):
@@ -186,15 +186,15 @@ def clean_freight(value):
     except:
         return np.nan
 
-df_clean['Freight_Cost_(USD)_clean'] = df_clean['Freight_Cost_(USD)'].apply(clean_freight)
+df_clean['Freight_Cost_USD_clean'] = df_clean['Freight_Cost_USD'].apply(clean_freight)
 
 print(f"\nFreight cost statistics after cleaning:")
-print(f"Missing values: {df_clean['Freight_Cost_(USD)_clean'].isna().sum()}")
-print(f"Mean freight: ${df_clean['Freight_Cost_(USD)_clean'].mean():.2f}")
-print(f"Median freight: ${df_clean['Freight_Cost_(USD)_clean'].median():.2f}")
+print(f"Missing values: {df_clean['Freight_Cost_USD_clean'].isna().sum()}")
+print(f"Mean freight: ${df_clean['Freight_Cost_USD_clean'].mean():.2f}")
+print(f"Median freight: ${df_clean['Freight_Cost_USD_clean'].median():.2f}")
 
 # Update the features DataFrame with cleaned freight cost
-X['freight_cost'] = df_clean['Freight_Cost_(USD)_clean'].fillna(1000.0).values
+X['freight_cost'] = df_clean['Freight_Cost_USD_clean'].fillna(1000.0).values
 
 # Verify all features are numeric
 print(f"\nFeature data types after cleaning:")
@@ -283,10 +283,10 @@ mappings = {
     'product_mapping': dict(zip(product_encoder.classes_, range(len(product_encoder.classes_)))),
     'feature_names': list(X.columns),
     'feature_statistics': {
-        'weight_mean': float(df_clean['Weight_(Kilograms)_clean'].mean()),
-        'weight_median': float(df_clean['Weight_(Kilograms)_clean'].median()),
+        'weight_mean': float(df_clean['Weight_Kilograms_clean'].mean()),
+        'weight_median': float(df_clean['Weight_Kilograms_clean'].median()),
         'quantity_mean': float(df_clean['Line_Item_Quantity'].mean()),
-        'freight_mean': float(df_clean['Freight_Cost_(USD)_clean'].mean()),
+        'freight_mean': float(df_clean['Freight_Cost_USD_clean'].mean()),
     }
 }
 
@@ -309,16 +309,16 @@ print("\n🔍 Testing model with tariff simulator format...")
 def predict_delay_for_simulator(shipment_data):
     """
     Predict delay for a shipment in tariff simulator format
-    shipment_data: dict with keys: Country, Product_Group, optional: Weight_(Kilograms), Line_Item_Quantity, Freight_Cost_(USD)
+    shipment_data: dict with keys: Country, Product_Group, optional: Weight_Kilograms, Line_Item_Quantity, Freight_Cost_USD
     """
     # Get mappings
     country_code = mappings['country_mapping'].get(shipment_data.get('Country', 'Unknown'), 0)
     product_code = mappings['product_mapping'].get(shipment_data.get('Product_Group', 'Unknown'), 0)
     
     # Use provided values or defaults from statistics
-    weight = shipment_data.get('Weight_(Kilograms)', mappings['feature_statistics']['weight_median'])
+    weight = shipment_data.get('Weight_Kilograms', mappings['feature_statistics']['weight_median'])
     quantity = shipment_data.get('Line_Item_Quantity', mappings['feature_statistics']['quantity_mean'])
-    freight = shipment_data.get('Freight_Cost_(USD)', mappings['feature_statistics']['freight_mean'])
+    freight = shipment_data.get('Freight_Cost_USD', mappings['feature_statistics']['freight_mean'])
     
     # Current month/quarter (for recency)
     current_month = datetime.now().month
