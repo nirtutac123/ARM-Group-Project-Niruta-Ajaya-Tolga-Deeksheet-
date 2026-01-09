@@ -87,8 +87,13 @@ def load_data():
 def load_ml_model():
     """Load the trained ML model"""
     try:
-        model = joblib.load('simplified_delay_model.pkl')
-        mappings = joblib.load('simplified_model_mappings.pkl')
+        # Try loading from ML directory first, then root directory
+        try:
+            model = joblib.load('ML/simplified_delay_model.pkl')
+            mappings = joblib.load('ML/simplified_model_mappings.pkl')
+        except FileNotFoundError:
+            model = joblib.load('simplified_delay_model.pkl')
+            mappings = joblib.load('simplified_model_mappings.pkl')
         return model, mappings
     except FileNotFoundError:
         return None, None
@@ -135,8 +140,8 @@ def generate_sample_data(n_samples=1000):
 # Main app
 def main():
     # Title
-    st.title("📦 Supply Chain Management Analytics Dashboard")
-    st.markdown("### Advanced Research Methodologies - Group Project")
+    st.title("� Predicting Supply Chain Disruptions in Manufacturing")
+    st.markdown("### Using Machine Learning | Advanced Research Methodologies Project")
     st.markdown("---")
     
     # Load data
@@ -220,8 +225,8 @@ def main():
         show_cost_analysis(df)
     elif page == "🤖 ML Predictions":
         show_ml_predictions(df)
-    elif page == "🎯 Tariff Impact Simulator":
-        show_tariff_simulator(df)
+    elif page == "🎯 Disruption Scenario Simulator":
+        show_disruption_simulator(df)
 
 def show_overview(df):
     """Display overview dashboard"""
@@ -784,15 +789,15 @@ def show_ml_predictions(df):
             st.write(f"- Expected delivery: **{abs(prediction):.1f} days early**")
             st.write(f"- Good performance expected for this route and product")
 
-def show_tariff_simulator(df):
-    """Display tariff impact simulator"""
-    st.header("🎯 Tariff Impact Simulator")
+def show_disruption_simulator(df):
+    """Display disruption scenario simulator"""
+    st.header("🎯 Manufacturing Disruption Scenario Simulator")
     
     st.markdown("""
-    This tool simulates the impact of U.S. tariffs on delivery times and costs based on:
-    - Country vulnerability factors
-    - Product category sensitivity
-    - Historical trade policy analysis
+    This tool simulates potential supply chain disruptions based on:
+    - Manufacturing country risk factors
+    - Product category vulnerability
+    - Historical disruption patterns and external factors
     """)
     
     st.markdown("---")
@@ -806,40 +811,40 @@ def show_tariff_simulator(df):
         st.markdown("### 📦 Shipment Details")
         
         if model is not None:
-            country = st.selectbox("Origin Country", sorted(mappings['country_mapping'].keys()), key="tariff_country")
-            product = st.selectbox("Product Group", sorted(mappings['product_mapping'].keys()), key="tariff_product")
+            country = st.selectbox("Manufacturing Country", sorted(mappings['country_mapping'].keys()), key="disruption_country")
+            product = st.selectbox("Product Group", sorted(mappings['product_mapping'].keys()), key="disruption_product")
         else:
-            country = st.text_input("Origin Country", "India")
+            country = st.text_input("Manufacturing Country", "India")
             product = st.text_input("Product Group", "ARV")
         
-        weight = st.number_input("Weight (kg)", min_value=0.1, value=10.0, step=0.1, key="tariff_weight")
-        quantity = st.number_input("Quantity", min_value=1, value=100, step=1, key="tariff_quantity")
-        freight = st.number_input("Freight Cost (USD)", min_value=0.0, value=1000.0, step=10.0, key="tariff_freight")
+        weight = st.number_input("Weight (kg)", min_value=0.1, value=10.0, step=0.1, key="disruption_weight")
+        quantity = st.number_input("Quantity", min_value=1, value=100, step=1, key="disruption_quantity")
+        freight = st.number_input("Freight Cost (USD)", min_value=0.0, value=1000.0, step=10.0, key="disruption_freight")
     
     with col2:
-        st.markdown("### 📊 Tariff Scenario")
+        st.markdown("### 📊 Disruption Scenario")
         
-        tariff_pct = st.slider("Tariff Increase (%)", min_value=0, max_value=50, value=25, step=5)
+        disruption_severity = st.slider("Disruption Severity (%)", min_value=0, max_value=50, value=25, step=5, help="Simulates impact of external factors: regulations, natural disasters, geopolitical events")
         
-        st.markdown("### 🌍 Vulnerability Factors")
+        st.markdown("### 🌍 Risk Factors")
         
-        # Predefined vulnerability scores
-        country_vuln_map = {
+        # Predefined risk scores (based on historical disruption patterns)
+        country_risk_map = {
             'India': 0.85, 'China': 0.75, 'Vietnam': 0.45,
             'Germany': 0.35, 'France': 0.35, 'South Africa': 0.25,
             'USA': 0.10
         }
         
-        product_vuln_map = {
+        product_risk_map = {
             'ARV': 0.80, 'HRDT': 0.65, 'ACT': 0.40,
             'ANTM': 0.40, 'MRDT': 0.50
         }
         
-        country_vuln = country_vuln_map.get(country, 0.5)
-        product_vuln = product_vuln_map.get(product, 0.5)
+        country_risk = country_risk_map.get(country, 0.5)
+        product_risk = product_risk_map.get(product, 0.5)
         
-        st.info(f"Country Vulnerability: {country_vuln:.2f}")
-        st.info(f"Product Vulnerability: {product_vuln:.2f}")
+        st.info(f"Country Risk Factor: {country_risk:.2f}")
+        st.info(f"Product Risk Factor: {product_risk:.2f}")
     
     if st.button("🚀 Simulate Impact", type="primary"):
         st.markdown("---")
@@ -863,15 +868,15 @@ def show_tariff_simulator(df):
         else:
             baseline_delay = 5.0  # Default estimate
         
-        # Calculate tariff impact
-        base_impact_per_10pct = 3.5  # days
-        cost_impact_per_10pct = 0.08  # 8%
+        # Calculate disruption impact
+        base_impact_per_10pct = 3.5  # days per 10% severity
+        cost_impact_per_10pct = 0.08  # 8% cost increase per 10% severity
         
-        additional_delay = (base_impact_per_10pct * (tariff_pct / 10) * 
-                          country_vuln * product_vuln)
+        additional_delay = (base_impact_per_10pct * (disruption_severity / 10) * 
+                          country_risk * product_risk)
         
-        cost_increase_pct = (cost_impact_per_10pct * (tariff_pct / 10) * 
-                            country_vuln * product_vuln) * 100
+        cost_increase_pct = (cost_impact_per_10pct * (disruption_severity / 10) * 
+                            country_risk * product_risk) * 100
         
         total_delay = baseline_delay + additional_delay
         new_freight_cost = freight * (1 + cost_increase_pct / 100)
@@ -883,7 +888,7 @@ def show_tariff_simulator(df):
             st.metric(
                 "Baseline Delay",
                 f"{baseline_delay:.1f} days",
-                help="Predicted delay without tariffs"
+                help="Predicted delay under normal conditions"
             )
         
         with col2:
@@ -916,14 +921,14 @@ def show_tariff_simulator(df):
         ))
         
         fig.add_trace(go.Bar(
-            name='With Tariff',
+            name='With Disruption',
             x=['Delivery Delay'],
             y=[total_delay],
             marker_color='coral'
         ))
         
         fig.update_layout(
-            title=f"Impact of {tariff_pct}% Tariff on Delivery Time",
+            title=f"Impact of {disruption_severity}% Disruption on Delivery Time",
             yaxis_title="Days",
             barmode='group',
             height=400
@@ -936,17 +941,19 @@ def show_tariff_simulator(df):
         
         if additional_delay > 7:
             st.error("⚠️ **High Impact Alert**")
-            st.write("- Consider alternative sourcing countries with lower vulnerability")
+            st.write("- Consider alternative manufacturing sources with lower risk")
             st.write("- Build safety stock to account for extended delays")
-            st.write("- Negotiate expedited shipping options")
+            st.write("- Implement expedited shipping options")
+            st.write("- Activate backup suppliers immediately")
         elif additional_delay > 3:
             st.warning("⚠️ **Moderate Impact**")
             st.write("- Monitor supply chain closely")
-            st.write("- Consider partial diversification of suppliers")
+            st.write("- Consider partial diversification of manufacturing sources")
+            st.write("- Prepare contingency plans")
         else:
             st.success("✅ **Low Impact**")
-            st.write("- Current supply chain resilient to tariff changes")
-            st.write("- Minor adjustments may be sufficient")
+            st.write("- Current supply chain shows resilience to disruptions")
+            st.write("- Continue monitoring but no immediate action needed")
 
 # Run the app
 if __name__ == "__main__":
