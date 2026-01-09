@@ -8,7 +8,7 @@ from datetime import datetime
 print("Step 1: Loading and preparing data...")
 
 # Load your cleaned data
-df = pd.read_csv('EDA_SCMS_Delivery_History_CLEANED.csv', encoding='latin-1')
+df = pd.read_csv('EDA/EDA_SCMS_Delivery_History_CLEANED.csv', encoding='latin-1')
 
 # Check the columns available
 print(f"Dataset shape: {df.shape}")
